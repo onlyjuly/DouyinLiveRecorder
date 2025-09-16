@@ -324,10 +324,37 @@ def adjust_max_request() -> None:
         error_count = 0
 
 
+def get_scheme_url_by_anchor_name(anchor_name: str) -> str:
+    """从scheme_config.ini中根据anchor_name匹配scheme_url"""
+    try:
+        scheme_config_file = f'{script_path}/config/scheme_config.ini'
+        if not os.path.exists(scheme_config_file):
+            return ""
+        
+        with open(scheme_config_file, 'r', encoding=text_encoding, errors='ignore') as file:
+            for line in file:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                
+                if ',' in line:
+                    name, scheme_url = line.split(',', 1)
+                    if name.strip() == anchor_name:
+                        return scheme_url.strip()
+        return ""
+    except Exception as e:
+        logger.error(f"读取scheme_config.ini失败: {e}")
+        return ""
+
+
 def push_message(record_name: str, live_url: str, content: str, anchor_name: str = "") -> None:
     msg_title = push_message_title.strip() or "[主播名]"
     # 替换模板变量
     msg_title = msg_title.replace('[主播名]', anchor_name)
+    
+    # 获取scheme_url
+    scheme_url = get_scheme_url_by_anchor_name(anchor_name) if anchor_name else ""
+    
     push_functions = {
         '微信': lambda: xizhi(xizhi_api_url, msg_title, content),
         '钉钉': lambda: dingtalk(dingtalk_api_url, content, dingtalk_phone_num, dingtalk_is_atall),
@@ -337,7 +364,7 @@ def push_message(record_name: str, live_url: str, content: str, anchor_name: str
         ),
         'TG': lambda: tg_bot(tg_chat_id, tg_token, content),
         'BARK': lambda: bark(
-            bark_msg_api, title=msg_title, content=content, level=bark_msg_level, sound=bark_msg_ring
+            bark_msg_api, title=msg_title, content=content, level=bark_msg_level, sound=bark_msg_ring, url=scheme_url
         ),
         'NTFY': lambda: ntfy(
             ntfy_api, title=msg_title, content=content, tags=ntfy_tags, action_url=live_url, email=ntfy_email
