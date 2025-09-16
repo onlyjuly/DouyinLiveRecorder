@@ -325,7 +325,7 @@ def adjust_max_request() -> None:
 
 
 def push_message(record_name: str, live_url: str, content: str) -> None:
-    msg_title = push_message_title.strip() or "直播间状态更新通知"
+    msg_title = push_message_title.strip() or "{anchor_name}"
     push_functions = {
         '微信': lambda: xizhi(xizhi_api_url, msg_title, content),
         '钉钉': lambda: dingtalk(dingtalk_api_url, content, dingtalk_phone_num, dingtalk_is_atall),
@@ -1854,7 +1854,7 @@ while True:
     ntfy_tags = read_config_value(config, '推送配置', 'ntfy推送标签', "tada")
     ntfy_email = read_config_value(config, '推送配置', 'ntfy推送邮箱', "")
     pushplus_token = read_config_value(config, '推送配置', 'pushplus推送token', "")
-    push_message_title = read_config_value(config, '推送配置', '自定义推送标题', "直播间状态更新通知")
+    push_message_title = read_config_value(config, '推送配置', '自定义推送标题', "{anchor_name}")
     begin_push_message_text = read_config_value(config, '推送配置', '自定义开播推送内容', "")
     over_push_message_text = read_config_value(config, '推送配置', '自定义关播推送内容', "")
     disable_record = options.get(read_config_value(config, '推送配置', '只推送通知不录制(是/否)', "否"), False)
