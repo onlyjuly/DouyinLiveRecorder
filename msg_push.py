@@ -165,14 +165,14 @@ def bark(api: str, title: str = "message", content: str = 'test', level: str = "
     return {"success": success, "error": error}
 
 
-def ntfy(api: str, title: str = "message", content: str = 'test', tags: str = 'tada', priority: int = 3,
+def ntfy(api: str, title: str = "message", content: str = 'test', tags: str = 'tada', priority: int = 5,
          action_url: str = "", attach: str = "", filename: str = "", click: str = "", icon: str = "",
-         delay: str = "", email: str = "", call: str = "") -> Dict[str, Any]:
+         delay: str = "", email: str = "", call: str = "", token: str = "") -> Dict[str, Any]:
     success = []
     error = []
     api_list = api.replace('，', ',').split(',') if api.strip() else []
     tags = tags.replace('，', ',').split(',') if tags else ['partying_face']
-    actions = [{"action": "view", "label": "view live", "url": action_url}] if action_url else []
+    actions = [{"action": "view", "label": "打开直播间", "url": action_url}] if action_url else []
     for _api in api_list:
         server, topic = _api.rsplit('/', maxsplit=1)
         json_data = {
@@ -194,7 +194,13 @@ def ntfy(api: str, title: str = "message", content: str = 'test', tags: str = 't
 
         try:
             data = json.dumps(json_data, ensure_ascii=False).encode('utf-8')
-            req = urllib.request.Request(server, data=data, headers=headers)
+            
+            # 准备请求headers
+            request_headers = headers.copy()
+            if token:
+                request_headers['Authorization'] = f'Bearer {token}'
+            
+            req = urllib.request.Request(server, data=data, headers=request_headers)
             response = opener.open(req, timeout=10)
             json_str = response.read().decode("utf-8")
             json_data = json.loads(json_str)
