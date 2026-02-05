@@ -197,24 +197,37 @@ def ntfy(api: str, title: str = "message", content: str = 'test', tags: str = 't
             
             # 准备请求headers
             request_headers = headers.copy()
+            # 添加用户代理等常见浏览器头部，避免被Cloudflare拦截
+            request_headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+            })
             if token:
                 request_headers['Authorization'] = f'Bearer {token}'
             
             req = urllib.request.Request(server, data=data, headers=request_headers)
+            print(f'正在向NTFY发送请求: {server}, 发送内容: {data.decode("utf-8")}')
             response = opener.open(req, timeout=10)
             json_str = response.read().decode("utf-8")
-            json_data = json.loads(json_str)
-            if "error" not in json_data:
+            print(f'NTFY响应状态码: {response.getcode()}, 响应内容: {json_str}')
+            
+            parsed_json = json.loads(json_str)
+            print(f'解析的JSON响应: {parsed_json}')
+            if "error" not in parsed_json:
                 success.append(_api)
             else:
                 error.append(_api)
-                print(f'ntfy推送失败, 推送地址：{_api}, 失败信息：{json_data["error"]}')
+                print(f'ntfy推送失败, 推送地址：{_api}, 失败信息：{parsed_json["error"]}')
         except urllib.error.HTTPError as e:
             error.append(_api)
             error_msg = e.read().decode("utf-8")
             print(f'ntfy推送失败, 推送地址：{_api}, 错误信息:{json.loads(error_msg)["error"]}')
         except Exception as e:
-            error.append(api)
+            error.append(_api)
             print(f'ntfy推送失败, 推送地址：{_api}, 错误信息:{e}')
     return {"success": success, "error": error}
 
